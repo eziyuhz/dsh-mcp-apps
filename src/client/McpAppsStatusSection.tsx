@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { SETUP_HINT } from '../setup-hint'
 import type { ClientConnectionRpc } from './McpAppToolView'
 
 export type ToolVisibility = 'model' | 'app' | 'both'
@@ -220,7 +221,7 @@ export function McpAppsStatusSection({ connection, on }: McpAppsStatusSectionPro
   }
 
   if (servers.length === 0) {
-    return <div style={SECTION_STYLE}>No MCP servers configured.</div>
+    return <pre style={{ ...SECTION_STYLE, margin: 0, padding: 12, whiteSpace: 'pre-wrap' }}>{SETUP_HINT}</pre>
   }
 
   return (

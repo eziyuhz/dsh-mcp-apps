@@ -5,6 +5,7 @@ import type { AgentRegistry } from '@deepseek-ai/dsh-agent'
 import type { ApprovalService, ApprovalOutcome } from '@deepseek-ai/dsh-user-approval'
 import { Config } from './config'
 import { AppSessionStore } from './session-store'
+import { SETUP_HINT, SETUP_TOOL_NAME } from './setup-hint'
 import { ServerToolManager, type ToolsService } from './tool-manager'
 import { ServerPool } from './transports/server-pool'
 
@@ -50,6 +51,26 @@ export function apply(ctx: Context, config: Config) {
   }
   const toolManager = new ServerToolManager(ctx.tools, sessionStore, notifyUiToolsChanged, config.defaultTimeoutMs)
   const pool = new ServerPool(ctx, config, toolManager)
+
+  ctx.effect(() => {
+    if (Object.keys(config.servers).length > 0) return () => {}
+    const dispose = ctx.tools.register({
+      name: SETUP_TOOL_NAME,
+      description: SETUP_HINT,
+      parameters: { type: 'object', properties: {}, additionalProperties: false },
+      execute: async () => ({ content: [{ type: 'text', text: SETUP_HINT }] }),
+      output: {
+        schema: {
+          type: 'object',
+          properties: { content: { type: 'array', items: {} } },
+          required: ['content'],
+          additionalProperties: false,
+        },
+        render: (_args: unknown, value: { content?: unknown }) => Array.isArray(value?.content) ? value.content : [],
+      },
+    })
+    return () => { dispose() }
+  })
 
   // Single coordinated effect: manages RPC routing, server lifecycle, and in-flight draining
   ctx.effect(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-;(globalThis as any).__PKG_VERSION__ = '0.2.7'
+;(globalThis as any).__PKG_VERSION__ = '0.2.8'
 import { ServerPool } from '../src/transports/server-pool'
 import { ServerToolManager } from '../src/tool-manager'
 import { AppSessionStore } from '../src/session-store'
