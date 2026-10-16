@@ -619,7 +619,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
         <iframe
           ref={iframeRef}
           title={`${tool.rawName} MCP App`}
-          sandbox="allow-scripts allow-forms allow-downloads"
+          sandbox="allow-scripts allow-forms allow-downloads allow-same-origin"
           allow={allowAttr || undefined}
           srcDoc={activeSrcDoc ?? undefined}
           onLoad={handleIframeLoad}

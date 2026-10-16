@@ -29,6 +29,23 @@ describe('Dynamic CSP Sanitization & Synthesis', () => {
     ])
   })
 
+  it('keeps an explicit loopback origin so a local viewer can be framed', () => {
+    const sanitized = sanitizeDomains([
+      'http://127.0.0.1:8787',
+      'http://localhost:8787',
+      'http://[::1]:8787',
+      'http://127.0.0.1:8787/viewer',
+      'http://127.0.0.1.evil.com:8787',
+      'http://192.168.1.1:8787',
+    ])
+    expect(sanitized).toEqual([
+      'http://127.0.0.1:8787',
+      'http://localhost:8787',
+      'http://[::1]:8787',
+    ])
+    expect(buildDynamicCsp({ frameDomains: sanitized, connectDomains: sanitized })).toContain('frame-src http://127.0.0.1:8787')
+  })
+
   it('buildDynamicCsp does not contain bare https: in img-src', () => {
     const csp = buildDynamicCsp()
     expect(csp).not.toMatch(/img-src[^;]*\bhttps:\b/)

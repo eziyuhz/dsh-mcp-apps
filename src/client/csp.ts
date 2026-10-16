@@ -20,12 +20,29 @@ function isPrivateOrLoopbackHost(host: string): boolean {
 const DOMAIN_PATTERN = /^([a-zA-Z0-9][-a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/
 const PUBLIC_IPV4_PATTERN = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/
 
+function explicitLoopbackOrigin(value: string): string | null {
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    return null
+  }
+  if (url.username || url.password || url.search || url.hash || url.pathname !== '/') return null
+  if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return null
+  if (!/^\d{1,5}$/.test(url.port)) return null
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') return null
+  return url.origin
+}
+
 export function sanitizeDomains(rawDomains?: unknown): string[] {
   if (!Array.isArray(rawDomains)) return []
   return rawDomains
     .filter((d): d is string => typeof d === 'string')
     .map(d => d.trim())
+    .map(d => explicitLoopbackOrigin(d) ?? d)
     .filter(d => {
+      if (explicitLoopbackOrigin(d)) return true
       if (d === '*' || d.includes(';') || d.includes(' ') || d.includes('<!--') || d.includes('-->')) return false
       if (/^http:\/\//i.test(d)) return false
 
