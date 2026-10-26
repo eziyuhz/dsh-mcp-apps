@@ -3,6 +3,12 @@ import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client
 import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 import { AppBridge, buildAllowAttribute } from '@modelcontextprotocol/ext-apps/app-bridge'
 import { withContentSecurityPolicy } from './csp'
+import {
+  DEFAULT_FRAME_HEIGHT,
+  clampFrameHeight,
+  resolveFrameConfig,
+  type FrameConfig,
+} from '../frame'
 
 export type ClientConnectionRpc = Pick<ConnectionHandle, 'rpc'>
 
@@ -33,6 +39,7 @@ interface ResourceData {
   html: string
   csp?: Record<string, string[]>
   permissions?: Record<string, string[]>
+  preferredHeight?: number
 }
 
 /**
@@ -231,10 +238,15 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
 
   const [resource, setResource] = useState<ResourceData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [height, setHeight] = useState<number>(360)
+  const [frame, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
+  const [height, setHeight] = useState<number>(DEFAULT_FRAME_HEIGHT)
   const [activeSrcDoc, setActiveSrcDoc] = useState<string | null>(null)
   const [navCount, setNavCount] = useState<number>(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const frameRef = useRef(frame)
+  frameRef.current = frame
+  const heightRef = useRef(height)
+  heightRef.current = height
 
   const connectionRef = useRef(connection)
   connectionRef.current = connection
@@ -253,6 +265,27 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     setError(null)
     setNavCount(0)
   }, [sessionToken, resourceUri, argsRaw])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    connectionRef.current.rpc.call('/api', 'mcp-apps/frame', null, controller.signal)
+      .then((res) => {
+        if (!res.ok) return
+        const next = resolveFrameConfig(res.value as Partial<FrameConfig>)
+        setFrame(next)
+        setHeight((current) => clampFrameHeight(current, next.minHeight, next.maxHeight))
+      })
+      .catch(() => {
+        // Keep compiled defaults if the host is older than this client bundle.
+      })
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    if (resource?.preferredHeight == null) return
+    const next = clampFrameHeight(resource.preferredHeight, frame.minHeight, frame.maxHeight)
+    setHeight(next)
+  }, [resource?.uri, resource?.preferredHeight, frame.minHeight, frame.maxHeight])
 
   // 1. Fetch UI HTML resource once settled call parameters are available
   useEffect(() => {
@@ -311,7 +344,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     transportRef.current = transport
     isInitializedRef.current = false
 
-    let lastHeight = 360
+    let lastHeight = heightRef.current
     let disposed = false
 
     // Sliding-window resize defense: 1000ms window, max 10 events, flushes final height on unlock
@@ -320,9 +353,10 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       const now = Date.now()
       const windowMs = 1000
       const maxEvents = 10
+      const { minHeight, maxHeight } = frameRef.current
 
       resizeTimestampsRef.current = resizeTimestampsRef.current.filter(t => now - t < windowMs)
-      const clamped = Math.max(160, Math.min(Math.round(params.height), 1200))
+      const clamped = clampFrameHeight(params.height, minHeight, maxHeight)
       pendingHeightRef.current = clamped
 
       if (resizeTimestampsRef.current.length >= maxEvents) {
@@ -626,7 +660,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
           style={{
             display: 'block',
             width: '100%',
-            minHeight: '160px',
+            minHeight: `${frame.minHeight}px`,
             height: `${height}px`,
             border: 0,
             background: 'transparent',

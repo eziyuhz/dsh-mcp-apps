@@ -555,6 +555,14 @@ describe('RPC tools/call Authorization and Lifecycle', () => {
     expect(serialized).not.toMatch(/command|args|env|headers|"url"/)
   })
 
+  it('serves frame config without a session token', async () => {
+    const res = await rpcHandler('frame', {})
+    expect(res).toEqual({
+      ok: true,
+      value: { defaultHeight: 360, minHeight: 160, maxHeight: 1200 },
+    })
+  })
+
   it('disposes sessionStore when host plugin unloads', async () => {
     const store = (toolManager as any).sessionStore
     const disposeSpy = vi.spyOn(store, 'dispose')

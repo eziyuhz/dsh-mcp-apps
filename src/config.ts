@@ -1,5 +1,11 @@
 import Schema from '@deepseek-ai/schemastery'
 import { DEFAULT_MAX_MESSAGE_BYTES } from './constants'
+import {
+  DEFAULT_FRAME_HEIGHT,
+  DEFAULT_FRAME_MAX_HEIGHT,
+  DEFAULT_FRAME_MIN_HEIGHT,
+  type FrameConfig,
+} from './frame'
 
 const REMOTE_URL_PATTERN = /^https?:\/\/\S+$/
 
@@ -57,6 +63,8 @@ export interface Config {
   defaultTimeoutMs?: number
   /** This DSH host's own externally reachable base URL (e.g. `https://dsh.example.com`), used to build the OAuth `redirect_uri` for `oauth`-enabled servers. Required for OAuth — never derived from an inbound request (that value is caller-controlled and cannot be trusted for a redirect URI baked into dynamic client registration). */
   externalUrl?: string
+  /** Host-wide iframe clamp. Per-app `preferredHeight` and `size-changed` still win inside this range. */
+  frame?: FrameConfig
 }
 
 const AppToolCallsSchema = Schema.union([
@@ -136,10 +144,21 @@ const ServerNameSchema = Schema.string()
   .pattern(SERVER_NAME_REGEX)
   .description('Server name cannot contain consecutive underscores or end with an underscore')
 
+const FrameSchema: Schema<FrameConfig> = Schema.object({
+  defaultHeight: Schema.number().min(1).default(DEFAULT_FRAME_HEIGHT).description('Initial iframe height in pixels before a resource preferredHeight or size-changed update.'),
+  minHeight: Schema.number().min(1).default(DEFAULT_FRAME_MIN_HEIGHT).description('Minimum iframe height in pixels.'),
+  maxHeight: Schema.number().min(1).default(DEFAULT_FRAME_MAX_HEIGHT).description('Maximum iframe height in pixels; size-changed values are clamped to this.'),
+}).description('Inline MCP App iframe height clamp. Apps may still pass preferredHeight on the UI resource and resize via size-changed.')
+
 export const Config: Schema<Config> = Schema.object({
   servers: Schema.dict(Schema.union([StdioSchema, RemoteSchema]).required(), ServerNameSchema).default({}).description('MCP servers to host, keyed by a name unique within this plugin.'),
   defaultTimeoutMs: Schema.number().min(1).default(30000).role('ms').description('Fallback tool-call timeout, in milliseconds, used by any server that does not set its own `toolCallTimeoutMs`.'),
   externalUrl: Schema.string().pattern(REMOTE_URL_PATTERN).description('This DSH host\'s own externally reachable base URL, used to build the OAuth `redirect_uri` for any `oauth`-enabled server. Required for OAuth; never derived from an inbound request.'),
+  frame: FrameSchema.default({
+    defaultHeight: DEFAULT_FRAME_HEIGHT,
+    minHeight: DEFAULT_FRAME_MIN_HEIGHT,
+    maxHeight: DEFAULT_FRAME_MAX_HEIGHT,
+  }),
 })
 
 import { DSH_ENV_PREFIX, SENSITIVE_ENV_PATTERN } from '@deepseek-ai/dsh-subprocess'

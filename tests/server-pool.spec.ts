@@ -100,6 +100,27 @@ describe('ServerPool Lifecycle', () => {
 
     const res = await pool.readResource('srv', 'ui://srv/app')
     expect(res.html).toBe('<div>App Content</div>')
+    expect(res.preferredHeight).toBeUndefined()
+  })
+
+  it('readResource forwards preferredHeight from resource UI metadata', async () => {
+    const mockClient = {
+      readResource: vi.fn().mockResolvedValue({
+        contents: [{
+          uri: 'ui://srv/app',
+          text: '<html></html>',
+          mimeType: 'text/html',
+          _meta: { ui: { preferredHeight: 520 } },
+        }],
+      }),
+    }
+    const pool = new ServerPool({} as any, {
+      servers: { srv: { transport: 'stdio', command: 'cmd' } },
+    }, { getUiToolsSnapshot: () => [{ resourceUri: 'ui://srv/app', serverName: 'srv' }] } as any)
+    ;(pool as any).servers.set('srv', { client: mockClient, disposeTransport: vi.fn() })
+
+    const res = await pool.readResource('srv', 'ui://srv/app')
+    expect(res.preferredHeight).toBe(520)
   })
 
   it('clears a pending reconnect timer before scheduling a new one, avoiding double reconnects', async () => {

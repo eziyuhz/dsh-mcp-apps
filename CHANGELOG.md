@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.9] - 2026-10-26
+
+### Added
+
+- Host iframe height is now configurable via `frame.defaultHeight` / `frame.minHeight` / `frame.maxHeight`, exposed to the client over `mcp-apps/frame`.
+- UI resources may pass `_meta.ui.preferredHeight`; the inline view uses that as the initial iframe height, then still follows `size-changed` inside the clamp.
+
+[Compare v0.2.8...v0.2.9](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.8...v0.2.9)
+
 ## [0.2.4] - 2026-09-30
 
 ### Added

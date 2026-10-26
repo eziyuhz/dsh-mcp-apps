@@ -7,6 +7,7 @@ import { Config } from './config'
 import { AppSessionStore } from './session-store'
 import { SETUP_HINT, SETUP_TOOL_NAME } from './setup-hint'
 import { ServerToolManager, type ToolsService } from './tool-manager'
+import { resolveFrameConfig } from './frame'
 import { ServerPool } from './transports/server-pool'
 
 export const name = 'mcp-apps'
@@ -120,6 +121,10 @@ export function apply(ctx: Context, config: Config) {
               // session-scoped and carries no secrets (see ServerStatus).
               await pool.waitForInitialSync()
               return { ok: true as const, value: pool.getStatusSnapshot() }
+            }
+
+            case 'frame': {
+              return { ok: true as const, value: resolveFrameConfig(config.frame) }
             }
 
             case 'resources/list': {
@@ -269,7 +274,7 @@ export function apply(ctx: Context, config: Config) {
       }
     }
 
-    const endpoints = ['tools/list-ui', 'servers/status', 'resources/list', 'resources/read', 'resources/read-raw', 'tools/call', 'oauth/authorize', 'oauth/disconnect', 'servers/retry'] as const
+    const endpoints = ['tools/list-ui', 'servers/status', 'frame', 'resources/list', 'resources/read', 'resources/read-raw', 'tools/call', 'oauth/authorize', 'oauth/disconnect', 'servers/retry'] as const
     const unregisterPostRoutes = endpoints.map(endpoint => connectionFetch.register({
       path: `/api/mcp-apps/${endpoint}`,
       methods: ['POST'],

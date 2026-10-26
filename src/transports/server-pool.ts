@@ -11,6 +11,7 @@ import {
 } from '@modelcontextprotocol/sdk/client/auth.js'
 import type { Context } from '@deepseek-ai/cordis'
 import { expandEnvVars, resolveToolCallTimeoutMs, type Config, type OAuthOptions, type ServerConfig } from '../config'
+import { parsePreferredHeight, resolveFrameConfig } from '../frame'
 import type { ServerToolManager, UiToolDescriptor, ToolSummary } from '../tool-manager'
 import { createStdioTransport, type ManagedStdio } from './subprocess'
 import { createRemoteTransport } from './remote'
@@ -173,6 +174,7 @@ export interface ResourceResponse {
   html: string
   csp?: Record<string, string[]>
   permissions?: Record<string, string[]>
+  preferredHeight?: number
 }
 
 /**
@@ -513,7 +515,11 @@ export class ServerPool {
     }
 
     const meta = (item as { _meta?: unknown; meta?: unknown })._meta ?? (item as { meta?: unknown }).meta
-    const ui = typeof meta === 'object' && meta !== null ? (meta as { ui?: { csp?: Record<string, string[]>; permissions?: Record<string, string[]> } }).ui : undefined
+    const ui = typeof meta === 'object' && meta !== null
+      ? (meta as { ui?: { csp?: Record<string, string[]>; permissions?: Record<string, string[]>; preferredHeight?: unknown } }).ui
+      : undefined
+    const frame = resolveFrameConfig(this.config.frame)
+    const preferredHeight = parsePreferredHeight(ui?.preferredHeight, frame.minHeight, frame.maxHeight)
 
     let permissions = ui?.permissions
     if (permissions) {
@@ -533,6 +539,7 @@ export class ServerPool {
       html,
       csp: ui?.csp,
       permissions,
+      ...(preferredHeight !== undefined ? { preferredHeight } : {}),
     }
   }
 

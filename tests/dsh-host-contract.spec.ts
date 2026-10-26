@@ -2,6 +2,7 @@ import { Context } from '@deepseek-ai/cordis'
 import { HostConnectionService, type ConnectionFetchRoute } from '@deepseek-ai/dsh-client-connection'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apply, name, inject } from '../src/index'
+import { SETUP_TOOL_NAME } from '../src/setup-hint'
 import type { Config } from '../src/config'
 import { ServerPool } from '../src/transports/server-pool'
 import { AppSessionStore } from '../src/session-store'
@@ -34,8 +35,10 @@ describe('DSH host contracts', () => {
     const stopAll = vi.spyOn(ServerPool.prototype, 'stopAll').mockResolvedValue(undefined)
     apply(ctx as any, config)
 
-    expect(register).toHaveBeenCalledTimes(10)
+    expect(register).toHaveBeenCalledTimes(11)
     expect(routes.has('/api/mcp-apps/tools/list-ui')).toBe(true)
+    expect(routes.has('/api/mcp-apps/frame')).toBe(true)
+    expect(routes.get('/api/mcp-apps/frame')!.methods).toEqual(['POST'])
     expect(routes.has('/api/mcp-apps/oauth/authorize')).toBe(true)
     expect(routes.get('/api/mcp-apps/oauth/authorize')!.methods).toEqual(['POST'])
     expect(routes.has('/api/mcp-apps/oauth/disconnect')).toBe(true)
@@ -366,6 +369,8 @@ describe('DSH host contracts', () => {
     expect(stopAll).toHaveBeenCalledOnce()
     expect(disposeTools).toHaveBeenCalledOnce()
     expect(disposeSessions).toHaveBeenCalledOnce()
-    expect(tools.register).not.toHaveBeenCalled()
+    expect(tools.register).toHaveBeenCalledOnce()
+    const registered = tools.register.mock.calls.at(0)?.at(0) as { name?: string } | undefined
+    expect(registered?.name).toBe(SETUP_TOOL_NAME)
   })
 })
