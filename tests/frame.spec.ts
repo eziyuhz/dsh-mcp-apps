@@ -32,8 +32,9 @@ describe('frame height', () => {
     expect(clampFrameHeight(Number.POSITIVE_INFINITY, 160, 1200)).toBe(160)
   })
 
-  it('keeps size-changed from shrinking below preferredHeight', () => {
-    const floor = parsePreferredHeight(520, 160, 1200) ?? 160
-    expect(Math.max(floor, clampFrameHeight(150, 160, 1200))).toBe(520)
+  it('locks to preferredHeight instead of following a later size-changed echo', () => {
+    const preferred = parsePreferredHeight(520, 160, 1200)
+    expect(preferred).toBe(520)
+    expect(preferred !== undefined ? preferred : clampFrameHeight(640, 160, 1200)).toBe(520)
   })
 })

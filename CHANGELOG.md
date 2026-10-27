@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.11] - 2026-10-27
+
+### Fixed
+
+- Cards with `_meta.ui.preferredHeight` no longer apply `size-changed` at all. A later 640/100vh echo was still jumping 360 → 520 → 640 after 0.2.10 only blocked shrinking. Height is taken from the resource in the same tick the iframe first renders.
+
+[Compare v0.2.10...v0.2.11](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.10...v0.2.11)
+
 ## [0.2.10] - 2026-10-27
 
 ### Fixed

@@ -284,12 +284,6 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     return () => controller.abort()
   }, [])
 
-  useEffect(() => {
-    if (resource?.preferredHeight == null) return
-    const next = clampFrameHeight(resource.preferredHeight, frame.minHeight, frame.maxHeight)
-    setHeight(next)
-  }, [resource?.uri, resource?.preferredHeight, frame.minHeight, frame.maxHeight])
-
   // 1. Fetch UI HTML resource once settled call parameters are available
   useEffect(() => {
     if (!sessionToken || !resourceUri) return
@@ -302,7 +296,10 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       controller.signal
     ).then((res) => {
       if (!res.ok) throw new Error(res.error.message)
-      setResource(res.value as ResourceData)
+      const next = res.value as ResourceData
+      const preferred = parsePreferredHeight(next.preferredHeight, frameRef.current.minHeight, frameRef.current.maxHeight)
+      if (preferred !== undefined) setHeight(preferred)
+      setResource(next)
     }).catch((err) => {
       if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : String(err))
@@ -357,7 +354,12 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       const windowMs = 1000
       const maxEvents = 10
       const { minHeight, maxHeight } = frameRef.current
-      const floor = parsePreferredHeight(preferredHeightRef.current, minHeight, maxHeight) ?? minHeight
+      const preferred = parsePreferredHeight(preferredHeightRef.current, minHeight, maxHeight)
+      // Apps that declare preferredHeight fill the host iframe. Echoed
+      // size-changed (relay clientHeight / 100vh) would jump the card after
+      // the first paint.
+      if (preferred !== undefined) return
+      const floor = minHeight
 
       resizeTimestampsRef.current = resizeTimestampsRef.current.filter(t => now - t < windowMs)
       const clamped = Math.max(floor, clampFrameHeight(params.height, minHeight, maxHeight))
@@ -651,7 +653,6 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
           visibility: isExpanded ? 'visible' : 'hidden',
           contain: 'strict',
           overflow: 'hidden',
-          transition: 'height 0.15s ease',
         }}
       >
         <iframe
