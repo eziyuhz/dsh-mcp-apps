@@ -651,7 +651,6 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
         style={{
           height: isExpanded ? `${height}px` : '0px',
           visibility: isExpanded ? 'visible' : 'hidden',
-          contain: 'strict',
           overflow: 'hidden',
         }}
       >
@@ -665,9 +664,9 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
           style={{
             display: 'block',
             width: '100%',
-            minHeight: `${frame.minHeight}px`,
             height: `${height}px`,
             border: 0,
+            overflow: 'hidden',
             background: 'transparent',
           }}
         />
