@@ -120,7 +120,7 @@ describe('ServerPool Lifecycle', () => {
     ;(pool as any).servers.set('srv', { client: mockClient, disposeTransport: vi.fn() })
 
     const res = await pool.readResource('srv', 'ui://srv/app')
-    expect(res.preferredHeight).toBe(480)
+    expect(res.preferredHeight).toBe(360)
   })
 
   it('clears a pending reconnect timer before scheduling a new one, avoiding double reconnects', async () => {

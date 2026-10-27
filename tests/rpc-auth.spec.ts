@@ -559,7 +559,7 @@ describe('RPC tools/call Authorization and Lifecycle', () => {
     const res = await rpcHandler('frame', {})
     expect(res).toEqual({
       ok: true,
-      value: { defaultHeight: 400, minHeight: 160, maxHeight: 480 },
+      value: { defaultHeight: 320, minHeight: 160, maxHeight: 360 },
     })
   })
 

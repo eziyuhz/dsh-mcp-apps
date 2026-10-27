@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.16] - 2026-10-27
+
+### Changed
+
+- DSH adapter iframe is 320px (max 360px). Taller cards were still folding the Turn and clipping the mol3d canvas.
+
+[Compare v0.2.15...v0.2.16](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.15...v0.2.16)
+
 ## [0.2.15] - 2026-10-27
 
 ### Changed

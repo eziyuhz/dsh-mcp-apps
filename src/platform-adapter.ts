@@ -17,9 +17,9 @@ export interface PlatformUiAdapter {
 export const platformAdapters: Record<HostPlatform, PlatformUiAdapter> = {
   dsh: {
     id: 'dsh',
-    defaultHeight: 400,
+    defaultHeight: 320,
     minHeight: 160,
-    maxHeight: 480,
+    maxHeight: 360,
   },
   default: {
     id: 'default',
