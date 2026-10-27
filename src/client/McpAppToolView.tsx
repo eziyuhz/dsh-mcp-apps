@@ -4,9 +4,8 @@ import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 import { AppBridge, buildAllowAttribute } from '@modelcontextprotocol/ext-apps/app-bridge'
 import { withContentSecurityPolicy } from './csp'
 import {
-  hostContainerHeight,
+  HOST_FRAME_CSS_HEIGHT,
   resolveFrameConfig,
-  scrollParentHeight,
   type FrameConfig,
 } from '../frame'
 
@@ -238,17 +237,10 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
 
   const [resource, setResource] = useState<ResourceData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [frame, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
-  const [height, setHeight] = useState<number>(() => {
-    const initial = resolveFrameConfig()
-    return hostContainerHeight(initial.minHeight, initial.maxHeight)
-  })
+  const [, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
   const [activeSrcDoc, setActiveSrcDoc] = useState<string | null>(null)
   const [navCount, setNavCount] = useState<number>(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const frameRef = useRef(frame)
-  frameRef.current = frame
 
   const connectionRef = useRef(connection)
   connectionRef.current = connection
@@ -268,9 +260,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     connectionRef.current.rpc.call('/api', 'mcp-apps/frame', null, controller.signal)
       .then((res) => {
         if (!res.ok) return
-        const next = resolveFrameConfig(res.value as Partial<FrameConfig>)
-        setFrame(next)
-        setHeight(hostContainerHeight(next.minHeight, next.maxHeight, scrollParentHeight(cardRef.current)))
+        setFrame(resolveFrameConfig(res.value as Partial<FrameConfig>))
       })
       .catch(() => {
         // Keep compiled defaults if the host is older than this client bundle.
@@ -384,16 +374,6 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       }, 0)
     }
   }, [sessionToken, resourceUri, htmlWithCsp])
-
-  useLayoutEffect(() => {
-    const apply = () => {
-      const { minHeight, maxHeight } = frameRef.current
-      setHeight(hostContainerHeight(minHeight, maxHeight, scrollParentHeight(cardRef.current)))
-    }
-    apply()
-    window.addEventListener('resize', apply)
-    return () => window.removeEventListener('resize', apply)
-  }, [resource])
 
   // Send tool result if result arrives after initialization
   useEffect(() => {
@@ -562,18 +542,13 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     )
   }
 
-  if (!resource) {
-    return (
-      <div style={CARD_STYLE} data-mcp-app-tool={tool.rawName}>
-        Loading MCP App…
-      </div>
-    )
-  }
-
-  const allowAttr = typeof buildAllowAttribute === 'function' ? buildAllowAttribute(resource.permissions) : undefined
+  const allowAttr = resource && typeof buildAllowAttribute === 'function'
+    ? buildAllowAttribute(resource.permissions)
+    : undefined
+  const bodyHeight = isExpanded ? HOST_FRAME_CSS_HEIGHT : '0px'
 
   return (
-    <div ref={cardRef} style={CARD_STYLE} data-mcp-app-tool={tool.rawName}>
+    <div style={CARD_STYLE} data-mcp-app-tool={tool.rawName}>
       <div
         style={{
           ...TITLE_STYLE,
@@ -607,11 +582,12 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       </div>
       <div
         style={{
-          height: isExpanded ? `${height}px` : '0px',
+          height: bodyHeight,
           visibility: isExpanded ? 'visible' : 'hidden',
           overflow: 'hidden',
         }}
       >
+        {resource ? (
         <iframe
           ref={iframeRef}
           title={`${tool.rawName} MCP App`}
@@ -628,6 +604,9 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
             background: 'transparent',
           }}
         />
+        ) : (
+          <div style={{ padding: 12, font: '14px/22px system-ui, sans-serif' }}>Loading MCP App…</div>
+        )}
       </div>
     </div>
   )

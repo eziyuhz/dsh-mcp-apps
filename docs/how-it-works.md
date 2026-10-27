@@ -33,7 +33,7 @@ DSH Chat Turn ──> McpAppToolView (React 18)
 - **LLM Schema Compliance**: Normalizes tool names to `^[a-zA-Z0-9_-]+$`, caps lengths at 64 characters, and appends SHA-256 collision digests (`mcp__<server>__<tool>_<hash>`) to satisfy frontier LLM API schemas. Tool sync is fingerprinted (description + input schema + UI resource URI) so unchanged tools aren't re-registered on every reconnect.
 - **DSH Anti-Collapse Auto-Reveal**: Walks up the DOM from the iframe and, on a `[hidden]` ancestor, dispatches a `beforematch` event and removes the attribute — detecting and reversing DSH's `useSearchableHidden` fold behavior rather than intercepting the hook itself — so interactive dashboards don't collapse into 1-line folded accordions when model streaming finishes. Includes an `Interactive App` badge, manual fold toggle, and state-preserving styles (`contain: strict`).
 - **Reverse Tool-Call Security**: Session tokens plus a per-server `allowAppToolCalls` policy gate which tools an embedded app can call back into the host (see the README's [Reverse Tool-Call Security Model](../README.md#reverse-tool-call-security-model)).
-- **Host-owned iframe height**: The card fills the DSH chat scroller (or `window.innerHeight` minus chrome), clamped to `frame.minHeight`–`frame.maxHeight`. Guest `size-changed` and `_meta.ui.preferredHeight` are ignored so a 100vh/clientHeight echo cannot jump the card after first paint.
+- **Locked iframe height**: The card body is `min(70dvh, 1200px)` from the first paint (including the loading state). Guest `size-changed` / `preferredHeight` are ignored. Measuring the DSH scroller caused jumps: the Turn disclosure re-folds on host commits (`hidden="until-found"`), so the pane height is not stable.
 
 ## The `./client` entry
 

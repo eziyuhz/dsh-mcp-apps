@@ -3,8 +3,8 @@ import {
   DEFAULT_FRAME_HEIGHT,
   DEFAULT_FRAME_MAX_HEIGHT,
   DEFAULT_FRAME_MIN_HEIGHT,
+  HOST_FRAME_CSS_HEIGHT,
   clampFrameHeight,
-  hostContainerHeight,
   parsePreferredHeight,
   resolveFrameConfig,
 } from '../src/frame'
@@ -33,11 +33,8 @@ describe('frame height', () => {
     expect(clampFrameHeight(Number.POSITIVE_INFINITY, 160, 1200)).toBe(160)
   })
 
-  it('locks the iframe to the host scroller instead of preferredHeight or size-changed', () => {
-    expect(hostContainerHeight(160, 1200, 900)).toBe(900)
-    expect(hostContainerHeight(160, 400, 900)).toBe(400)
-    expect(hostContainerHeight(160, 1200, 160)).toBe(160)
+  it('locks the DSH card to a CSS height that does not follow preferredHeight or size-changed', () => {
+    expect(HOST_FRAME_CSS_HEIGHT).toBe('min(70dvh, 1200px)')
     expect(parsePreferredHeight(720, 160, 1200)).toBe(720)
-    expect(hostContainerHeight(160, 1200, 900)).not.toBe(720)
   })
 })

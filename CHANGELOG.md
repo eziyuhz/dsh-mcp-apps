@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.14] - 2026-10-27
+
+### Fixed
+
+- Stop measuring the DSH chat scroller. That pane changes size when DSH re-folds the Turn (`hidden="until-found"`), which looked like the card jumping. The iframe is now `min(70dvh, 1200px)` in CSS from the loading state onward; JS never writes `height`.
+
+[Compare v0.2.13...v0.2.14](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.13...v0.2.14)
+
 ## [0.2.13] - 2026-10-27
 
 ### Fixed
