@@ -4,7 +4,7 @@ import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 import { AppBridge, buildAllowAttribute } from '@modelcontextprotocol/ext-apps/app-bridge'
 import { withContentSecurityPolicy } from './csp'
 import {
-  HOST_FRAME_CSS_HEIGHT,
+  clampFrameHeight,
   resolveFrameConfig,
   type FrameConfig,
 } from '../frame'
@@ -237,10 +237,15 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
 
   const [resource, setResource] = useState<ResourceData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
+  const [frame, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
+  const [height, setHeight] = useState<number>(() => resolveFrameConfig().defaultHeight)
   const [activeSrcDoc, setActiveSrcDoc] = useState<string | null>(null)
   const [navCount, setNavCount] = useState<number>(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const frameRef = useRef(frame)
+  frameRef.current = frame
+  const heightRef = useRef(height)
+  heightRef.current = height
 
   const connectionRef = useRef(connection)
   connectionRef.current = connection
@@ -248,6 +253,11 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
   const bridgeRef = useRef<AppBridge | null>(null)
   const transportRef = useRef<ResilientPostMessageTransport | null>(null)
   const isInitializedRef = useRef(false)
+
+  // Sliding window resize tracking
+  const resizeTimestampsRef = useRef<number[]>([])
+  const pendingHeightRef = useRef<number | null>(null)
+  const resetTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Clear error and reset navigation counter when call targets change
   useEffect(() => {
@@ -260,13 +270,21 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     connectionRef.current.rpc.call('/api', 'mcp-apps/frame', null, controller.signal)
       .then((res) => {
         if (!res.ok) return
-        setFrame(resolveFrameConfig(res.value as Partial<FrameConfig>))
+        const next = resolveFrameConfig(res.value as Partial<FrameConfig>)
+        setFrame(next)
+        setHeight((current) => clampFrameHeight(current, next.minHeight, next.maxHeight))
       })
       .catch(() => {
         // Keep compiled defaults if the host is older than this client bundle.
       })
     return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    if (resource?.preferredHeight == null) return
+    const next = clampFrameHeight(resource.preferredHeight, frame.minHeight, frame.maxHeight)
+    setHeight(next)
+  }, [resource?.uri, resource?.preferredHeight, frame.minHeight, frame.maxHeight])
 
   // 1. Fetch UI HTML resource once settled call parameters are available
   useEffect(() => {
@@ -280,8 +298,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       controller.signal
     ).then((res) => {
       if (!res.ok) throw new Error(res.error.message)
-      const next = res.value as ResourceData
-      setResource(next)
+      setResource(res.value as ResourceData)
     }).catch((err) => {
       if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : String(err))
@@ -326,10 +343,44 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     transportRef.current = transport
     isInitializedRef.current = false
 
+    let lastHeight = heightRef.current
     let disposed = false
 
-    // Host pane owns height. Guest size-changed (100vh / clientHeight echo) is ignored.
-    bridge.onsizechange = () => undefined
+    // Sliding-window resize defense: 1000ms window, max 10 events, flushes final height on unlock
+    bridge.onsizechange = (params) => {
+      if (typeof params.height !== 'number') return
+      const now = Date.now()
+      const windowMs = 1000
+      const maxEvents = 10
+      const { minHeight, maxHeight } = frameRef.current
+
+      resizeTimestampsRef.current = resizeTimestampsRef.current.filter(t => now - t < windowMs)
+      const clamped = clampFrameHeight(params.height, minHeight, maxHeight)
+      pendingHeightRef.current = clamped
+
+      if (resizeTimestampsRef.current.length >= maxEvents) {
+        if (!resetTimerRef.current) {
+          const oldest = resizeTimestampsRef.current[0] ?? now
+          const waitTime = Math.max(50, windowMs - (now - oldest))
+          resetTimerRef.current = setTimeout(() => {
+            resetTimerRef.current = null
+            if (pendingHeightRef.current !== null && !disposed) {
+              lastHeight = pendingHeightRef.current
+              setHeight(pendingHeightRef.current)
+            }
+          }, waitTime)
+        }
+        return
+      }
+
+      resizeTimestampsRef.current.push(now)
+      if (Math.abs(clamped - lastHeight) >= 6) {
+        lastHeight = clamped
+        requestAnimationFrame(() => {
+          if (!disposed) setHeight(clamped)
+        })
+      }
+    }
 
     bridge.oninitialized = () => {
       if (disposed) return
@@ -351,6 +402,10 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
 
     return () => {
       disposed = true
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current)
+        resetTimerRef.current = null
+      }
 
       // Detach this bridge/transport pair from the shared refs immediately,
       // so a subsequent (re)mount's effect body doesn't have to fight over
@@ -542,10 +597,15 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
     )
   }
 
-  const allowAttr = resource && typeof buildAllowAttribute === 'function'
-    ? buildAllowAttribute(resource.permissions)
-    : undefined
-  const bodyHeight = isExpanded ? HOST_FRAME_CSS_HEIGHT : '0px'
+  if (!resource) {
+    return (
+      <div style={CARD_STYLE} data-mcp-app-tool={tool.rawName}>
+        Loading MCP App…
+      </div>
+    )
+  }
+
+  const allowAttr = typeof buildAllowAttribute === 'function' ? buildAllowAttribute(resource.permissions) : undefined
 
   return (
     <div style={CARD_STYLE} data-mcp-app-tool={tool.rawName}>
@@ -582,12 +642,13 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       </div>
       <div
         style={{
-          height: bodyHeight,
+          height: isExpanded ? `${height}px` : '0px',
           visibility: isExpanded ? 'visible' : 'hidden',
+          contain: 'strict',
           overflow: 'hidden',
+          transition: 'height 0.15s ease',
         }}
       >
-        {resource ? (
         <iframe
           ref={iframeRef}
           title={`${tool.rawName} MCP App`}
@@ -598,15 +659,12 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
           style={{
             display: 'block',
             width: '100%',
-            height: '100%',
+            minHeight: `${frame.minHeight}px`,
+            height: `${height}px`,
             border: 0,
-            overflow: 'hidden',
             background: 'transparent',
           }}
         />
-        ) : (
-          <div style={{ padding: 12, font: '14px/22px system-ui, sans-serif' }}>Loading MCP App…</div>
-        )}
       </div>
     </div>
   )

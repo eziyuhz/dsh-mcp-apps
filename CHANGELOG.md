@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.15] - 2026-10-27
+
+### Changed
+
+- Reverted the DSH-only iframe CSS/container lock. Height again follows `preferredHeight` then `size-changed`, with `contain: strict`.
+- Added a platform adapter: DSH cards default to 400px and cap at 480px so a tall mol3d does not fold the Turn. Other hosts are documented as `default` (360–1200) and do not use this plugin.
+
+[Compare v0.2.14...v0.2.15](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.14...v0.2.15)
+
 ## [0.2.14] - 2026-10-27
 
 ### Fixed

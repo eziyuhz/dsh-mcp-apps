@@ -3,18 +3,23 @@ import {
   DEFAULT_FRAME_HEIGHT,
   DEFAULT_FRAME_MAX_HEIGHT,
   DEFAULT_FRAME_MIN_HEIGHT,
-  HOST_FRAME_CSS_HEIGHT,
   clampFrameHeight,
   parsePreferredHeight,
   resolveFrameConfig,
 } from '../src/frame'
+import { platformAdapters, resolvePlatformAdapter } from '../src/platform-adapter'
 
 describe('frame height', () => {
-  it('uses compiled defaults when config is omitted', () => {
+  it('uses the DSH platform adapter when config is omitted', () => {
     expect(resolveFrameConfig()).toEqual({
       defaultHeight: DEFAULT_FRAME_HEIGHT,
       minHeight: DEFAULT_FRAME_MIN_HEIGHT,
       maxHeight: DEFAULT_FRAME_MAX_HEIGHT,
+    })
+    expect(resolveFrameConfig()).toEqual({
+      defaultHeight: platformAdapters.dsh.defaultHeight,
+      minHeight: platformAdapters.dsh.minHeight,
+      maxHeight: platformAdapters.dsh.maxHeight,
     })
   })
 
@@ -33,8 +38,9 @@ describe('frame height', () => {
     expect(clampFrameHeight(Number.POSITIVE_INFINITY, 160, 1200)).toBe(160)
   })
 
-  it('locks the DSH card to a CSS height that does not follow preferredHeight or size-changed', () => {
-    expect(HOST_FRAME_CSS_HEIGHT).toBe('min(70dvh, 1200px)')
-    expect(parsePreferredHeight(720, 160, 1200)).toBe(720)
+  it('caps a tall preferredHeight to the DSH adapter so the Turn does not fold', () => {
+    const dsh = resolvePlatformAdapter('dsh')
+    expect(parsePreferredHeight(720, dsh.minHeight, dsh.maxHeight)).toBe(dsh.maxHeight)
+    expect(resolvePlatformAdapter('default').maxHeight).toBe(1200)
   })
 })

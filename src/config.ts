@@ -145,10 +145,10 @@ const ServerNameSchema = Schema.string()
   .description('Server name cannot contain consecutive underscores or end with an underscore')
 
 const FrameSchema: Schema<FrameConfig> = Schema.object({
-  defaultHeight: Schema.number().min(1).default(DEFAULT_FRAME_HEIGHT).description('Unused fallback if the host pane cannot be measured.'),
+  defaultHeight: Schema.number().min(1).default(DEFAULT_FRAME_HEIGHT).description('Initial iframe height in pixels before a resource preferredHeight or size-changed update.'),
   minHeight: Schema.number().min(1).default(DEFAULT_FRAME_MIN_HEIGHT).description('Minimum iframe height in pixels.'),
-  maxHeight: Schema.number().min(1).default(DEFAULT_FRAME_MAX_HEIGHT).description('Maximum iframe height in pixels; host container height is clamped to this.'),
-}).description('Legacy clamp kept for mcp-apps/frame. The inline card uses a fixed CSS height (min(70dvh, 1200px)); guest size-changed and preferredHeight do not resize it.')
+  maxHeight: Schema.number().min(1).default(DEFAULT_FRAME_MAX_HEIGHT).description('Maximum iframe height in pixels; preferredHeight and size-changed are clamped to this.'),
+}).description('DSH inline iframe clamp (platform adapter). Guest preferredHeight and size-changed stay inside this range.')
 
 export const Config: Schema<Config> = Schema.object({
   servers: Schema.dict(Schema.union([StdioSchema, RemoteSchema]).required(), ServerNameSchema).default({}).description('MCP servers to host, keyed by a name unique within this plugin.'),

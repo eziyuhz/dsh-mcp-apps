@@ -190,7 +190,7 @@ Rendered apps can call back into host tools (e.g. a "Refresh Data" button). That
 | `servers` | `Record<string, ServerConfig>` | `{}` | Map of server identifiers to transport configs. Names cannot contain `__` or end with `_`. |
 | `defaultTimeoutMs` | `number` | `30000` | Fallback timeout in ms for tool calls (must be `>= 1`). |
 | `externalUrl` | `string` | — | This DSH host's own externally reachable base URL (`http(s)://...`), used to build the OAuth `redirect_uri` for any `servers.<id>.oauth`-enabled server. Required if any server has `oauth` set; never derived from an inbound request. |
-| `frame` | `{ defaultHeight?, minHeight?, maxHeight? }` | `{360, 160, 1200}` | Legacy clamp on `mcp-apps/frame`. The inline card is `min(70dvh, 1200px)` in CSS and does not follow guest `preferredHeight` or `size-changed`. |
+| `frame` | `{ defaultHeight?, minHeight?, maxHeight? }` | `{400, 160, 480}` | DSH platform adapter. Initial iframe height and clamp; `_meta.ui.preferredHeight` and `size-changed` stay inside this range. Other hosts do not use this plugin. |
 | `servers.<id>.transport` | `'stdio' \| 'sse' \| 'streamable-http'` | *(Required)* | Transport mechanism. Only transports defined by the MCP specification are supported: `stdio`, `streamable-http`, and `sse` (deprecated upstream, kept for older servers). |
 | `servers.<id>.command` | `string` | — | Executable binary path (for `stdio`). |
 | `servers.<id>.args` | `string[]` | `[]` | Command arguments (for `stdio`). |
