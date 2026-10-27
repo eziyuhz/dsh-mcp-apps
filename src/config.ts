@@ -145,10 +145,10 @@ const ServerNameSchema = Schema.string()
   .description('Server name cannot contain consecutive underscores or end with an underscore')
 
 const FrameSchema: Schema<FrameConfig> = Schema.object({
-  defaultHeight: Schema.number().min(1).default(DEFAULT_FRAME_HEIGHT).description('Initial iframe height in pixels before a resource preferredHeight or size-changed update.'),
+  defaultHeight: Schema.number().min(1).default(DEFAULT_FRAME_HEIGHT).description('Unused fallback if the host pane cannot be measured.'),
   minHeight: Schema.number().min(1).default(DEFAULT_FRAME_MIN_HEIGHT).description('Minimum iframe height in pixels.'),
-  maxHeight: Schema.number().min(1).default(DEFAULT_FRAME_MAX_HEIGHT).description('Maximum iframe height in pixels; size-changed values are clamped to this.'),
-}).description('Inline MCP App iframe height clamp. Apps may still pass preferredHeight on the UI resource and resize via size-changed.')
+  maxHeight: Schema.number().min(1).default(DEFAULT_FRAME_MAX_HEIGHT).description('Maximum iframe height in pixels; host container height is clamped to this.'),
+}).description('Inline MCP App iframe fills the DSH chat pane (clamped). Guest size-changed and preferredHeight do not resize the card.')
 
 export const Config: Schema<Config> = Schema.object({
   servers: Schema.dict(Schema.union([StdioSchema, RemoteSchema]).required(), ServerNameSchema).default({}).description('MCP servers to host, keyed by a name unique within this plugin.'),

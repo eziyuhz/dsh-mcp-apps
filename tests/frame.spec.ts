@@ -4,6 +4,7 @@ import {
   DEFAULT_FRAME_MAX_HEIGHT,
   DEFAULT_FRAME_MIN_HEIGHT,
   clampFrameHeight,
+  hostContainerHeight,
   parsePreferredHeight,
   resolveFrameConfig,
 } from '../src/frame'
@@ -32,9 +33,11 @@ describe('frame height', () => {
     expect(clampFrameHeight(Number.POSITIVE_INFINITY, 160, 1200)).toBe(160)
   })
 
-  it('locks to preferredHeight instead of following a later size-changed echo', () => {
-    const preferred = parsePreferredHeight(520, 160, 1200)
-    expect(preferred).toBe(520)
-    expect(preferred !== undefined ? preferred : clampFrameHeight(640, 160, 1200)).toBe(520)
+  it('locks the iframe to the host scroller instead of preferredHeight or size-changed', () => {
+    expect(hostContainerHeight(160, 1200, 900)).toBe(900)
+    expect(hostContainerHeight(160, 400, 900)).toBe(400)
+    expect(hostContainerHeight(160, 1200, 160)).toBe(160)
+    expect(parsePreferredHeight(720, 160, 1200)).toBe(720)
+    expect(hostContainerHeight(160, 1200, 900)).not.toBe(720)
   })
 })

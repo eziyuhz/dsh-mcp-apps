@@ -19,7 +19,7 @@ importers:
   .:
     dependencies:
       '@deepseek-ai/dsh-client-ui-plugin-manager':
-        specifier: ^0.1.7-rc.2
+        specifier: '>=0.1.7-rc.2'
         version: 0.1.7-rc.2(@deepseek-ai/cordis@4.0.4)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.1

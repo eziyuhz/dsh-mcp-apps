@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.13] - 2026-10-27
+
+### Fixed
+
+- Inline MCP App cards take the DSH chat pane height (clamped) and ignore guest `size-changed` / `preferredHeight`. That stops the 360 → preferred → 100vh jump. `pnpm-lock.yaml` now matches the `>=0.1.7-rc.2` specifier so tag releases can `pnpm install --frozen-lockfile`.
+
+[Compare v0.2.12...v0.2.13](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.12...v0.2.13)
+
 ## [0.2.12] - 2026-10-27
 
 ### Fixed
