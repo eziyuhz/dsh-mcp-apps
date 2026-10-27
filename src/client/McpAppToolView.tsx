@@ -6,6 +6,7 @@ import { withContentSecurityPolicy } from './csp'
 import {
   DEFAULT_FRAME_HEIGHT,
   clampFrameHeight,
+  parsePreferredHeight,
   resolveFrameConfig,
   type FrameConfig,
 } from '../frame'
@@ -247,6 +248,8 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
   frameRef.current = frame
   const heightRef = useRef(height)
   heightRef.current = height
+  const preferredHeightRef = useRef<number | undefined>(undefined)
+  preferredHeightRef.current = resource?.preferredHeight
 
   const connectionRef = useRef(connection)
   connectionRef.current = connection
@@ -354,9 +357,10 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
       const windowMs = 1000
       const maxEvents = 10
       const { minHeight, maxHeight } = frameRef.current
+      const floor = parsePreferredHeight(preferredHeightRef.current, minHeight, maxHeight) ?? minHeight
 
       resizeTimestampsRef.current = resizeTimestampsRef.current.filter(t => now - t < windowMs)
-      const clamped = clampFrameHeight(params.height, minHeight, maxHeight)
+      const clamped = Math.max(floor, clampFrameHeight(params.height, minHeight, maxHeight))
       pendingHeightRef.current = clamped
 
       if (resizeTimestampsRef.current.length >= maxEvents) {

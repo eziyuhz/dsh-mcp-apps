@@ -3,6 +3,13 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import "@modelcontextprotocol/sdk/types.js";
 import { Context } from "@deepseek-ai/cordis";
 
+//#region src/frame.d.ts
+interface FrameConfig {
+  defaultHeight: number;
+  minHeight: number;
+  maxHeight: number;
+}
+//#endregion
 //#region src/config.d.ts
 interface ReconnectOptions {
   maxRetries?: number;
@@ -52,6 +59,8 @@ interface Config {
   defaultTimeoutMs?: number;
   /** This DSH host's own externally reachable base URL (e.g. `https://dsh.example.com`), used to build the OAuth `redirect_uri` for `oauth`-enabled servers. Required for OAuth — never derived from an inbound request (that value is caller-controlled and cannot be trusted for a redirect URI baked into dynamic client registration). */
   externalUrl?: string;
+  /** Host-wide iframe clamp. Per-app `preferredHeight` and `size-changed` still win inside this range. */
+  frame?: FrameConfig;
 }
 declare const Config: Schema<Config>;
 //#endregion

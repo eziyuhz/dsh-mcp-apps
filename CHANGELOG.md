@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.10] - 2026-10-27
+
+### Fixed
+
+- Rebuild the shipped `lib/client.js`. 0.2.9 only changed TypeScript sources, so DSH kept the old bundle: iframe started at 360px then `size-changed` could shrink it to 160px. Size-changed no longer goes below `_meta.ui.preferredHeight`.
+
+[Compare v0.2.9...v0.2.10](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.9...v0.2.10)
+
 ## [0.2.9] - 2026-10-26
 
 ### Added
