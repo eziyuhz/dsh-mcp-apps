@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.17] - 2026-10-27
+
+### Fixed
+
+- Ship the rebuilt client bundle for the 320/360 DSH adapter. 0.2.16 only tagged host sources, so the iframe still started at 400px.
+
+[Compare v0.2.16...v0.2.17](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.16...v0.2.17)
+
 ## [0.2.16] - 2026-10-27
 
 ### Changed
