@@ -1,10 +1,6 @@
-import { resolvePlatformAdapter, type PlatformUiAdapter } from './platform-adapter'
-
-const dsh = resolvePlatformAdapter('dsh')
-
-export const DEFAULT_FRAME_HEIGHT = dsh.defaultHeight
-export const DEFAULT_FRAME_MIN_HEIGHT = dsh.minHeight
-export const DEFAULT_FRAME_MAX_HEIGHT = dsh.maxHeight
+export const DEFAULT_FRAME_HEIGHT = 360
+export const DEFAULT_FRAME_MIN_HEIGHT = 160
+export const DEFAULT_FRAME_MAX_HEIGHT = 1200
 
 export interface FrameConfig {
   defaultHeight: number
@@ -22,14 +18,11 @@ export function clampFrameHeight(height: number, minHeight: number, maxHeight: n
   return Math.max(minHeight, Math.min(Math.round(height), maxHeight))
 }
 
-export function resolveFrameConfig(
-  input?: Partial<FrameConfig> | null,
-  adapter: PlatformUiAdapter = resolvePlatformAdapter(),
-): FrameConfig {
-  const minHeight = finitePositive(input?.minHeight, adapter.minHeight)
-  const maxHeight = Math.max(minHeight, finitePositive(input?.maxHeight, adapter.maxHeight))
+export function resolveFrameConfig(input?: Partial<FrameConfig> | null): FrameConfig {
+  const minHeight = finitePositive(input?.minHeight, DEFAULT_FRAME_MIN_HEIGHT)
+  const maxHeight = Math.max(minHeight, finitePositive(input?.maxHeight, DEFAULT_FRAME_MAX_HEIGHT))
   const defaultHeight = clampFrameHeight(
-    finitePositive(input?.defaultHeight, adapter.defaultHeight),
+    finitePositive(input?.defaultHeight, DEFAULT_FRAME_HEIGHT),
     minHeight,
     maxHeight,
   )

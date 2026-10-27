@@ -4,70 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.2.17] - 2026-10-27
-
-### Fixed
-
-- Ship the rebuilt client bundle for the 320/360 DSH adapter. 0.2.16 only tagged host sources, so the iframe still started at 400px.
-
-[Compare v0.2.16...v0.2.17](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.16...v0.2.17)
-
-## [0.2.16] - 2026-10-27
+## [0.2.18] - 2026-10-27
 
 ### Changed
 
-- DSH adapter iframe is 320px (max 360px). Taller cards were still folding the Turn and clipping the mol3d canvas.
+- Reverted 0.2.10–0.2.17 iframe height experiments (preferredHeight lock, contain:strict removal, host-scroller fill, 70dvh CSS, DSH size adapter). Behavior is again 0.2.9: `preferredHeight` then `size-changed`, clamp 160–1200.
 
-[Compare v0.2.15...v0.2.16](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.15...v0.2.16)
-
-## [0.2.15] - 2026-10-27
-
-### Changed
-
-- Reverted the DSH-only iframe CSS/container lock. Height again follows `preferredHeight` then `size-changed`, with `contain: strict`.
-- Added a platform adapter: DSH cards default to 400px and cap at 480px so a tall mol3d does not fold the Turn. Other hosts are documented as `default` (360–1200) and do not use this plugin.
-
-[Compare v0.2.14...v0.2.15](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.14...v0.2.15)
-
-## [0.2.14] - 2026-10-27
-
-### Fixed
-
-- Stop measuring the DSH chat scroller. That pane changes size when DSH re-folds the Turn (`hidden="until-found"`), which looked like the card jumping. The iframe is now `min(70dvh, 1200px)` in CSS from the loading state onward; JS never writes `height`.
-
-[Compare v0.2.13...v0.2.14](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.13...v0.2.14)
-
-## [0.2.13] - 2026-10-27
-
-### Fixed
-
-- Inline MCP App cards take the DSH chat pane height (clamped) and ignore guest `size-changed` / `preferredHeight`. That stops the 360 → preferred → 100vh jump. `pnpm-lock.yaml` now matches the `>=0.1.7-rc.2` specifier so tag releases can `pnpm install --frozen-lockfile`.
-
-[Compare v0.2.12...v0.2.13](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.12...v0.2.13)
-
-## [0.2.12] - 2026-10-27
-
-### Fixed
-
-- MCP App iframe wrapper no longer uses `contain: strict`. Size containment was clipping the nested mol3d canvas in the short DSH card even when `preferredHeight` was set. Iframe `overflow` is `hidden` so the inner 100% layout fills the card instead of adding a nested scrollbar.
-
-[Compare v0.2.11...v0.2.12](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.11...v0.2.12)
-
-## [0.2.11] - 2026-10-27
-
-### Fixed
-
-- Cards with `_meta.ui.preferredHeight` no longer apply `size-changed` at all. A later 640/100vh echo was still jumping 360 → 520 → 640 after 0.2.10 only blocked shrinking. Height is taken from the resource in the same tick the iframe first renders.
-
-[Compare v0.2.10...v0.2.11](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.10...v0.2.11)
-
-## [0.2.10] - 2026-10-27
-
-### Fixed
-
-- Rebuild the shipped `lib/client.js`. 0.2.9 only changed TypeScript sources, so DSH kept the old bundle: iframe started at 360px then `size-changed` could shrink it to 160px. Size-changed no longer goes below `_meta.ui.preferredHeight`.
-
-[Compare v0.2.9...v0.2.10](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.9...v0.2.10)
+[Compare v0.2.17...v0.2.18](https://github.com/eziyuhz/dsh-mcp-apps/compare/v0.2.17...v0.2.18)
 
 ## [0.2.9] - 2026-10-26
 

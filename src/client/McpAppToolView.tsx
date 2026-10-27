@@ -4,6 +4,7 @@ import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 import { AppBridge, buildAllowAttribute } from '@modelcontextprotocol/ext-apps/app-bridge'
 import { withContentSecurityPolicy } from './csp'
 import {
+  DEFAULT_FRAME_HEIGHT,
   clampFrameHeight,
   resolveFrameConfig,
   type FrameConfig,
@@ -238,7 +239,7 @@ export function McpAppToolView({ tool, connection, block }: McpAppToolViewProps)
   const [resource, setResource] = useState<ResourceData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [frame, setFrame] = useState<FrameConfig>(() => resolveFrameConfig())
-  const [height, setHeight] = useState<number>(() => resolveFrameConfig().defaultHeight)
+  const [height, setHeight] = useState<number>(DEFAULT_FRAME_HEIGHT)
   const [activeSrcDoc, setActiveSrcDoc] = useState<string | null>(null)
   const [navCount, setNavCount] = useState<number>(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
